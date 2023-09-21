@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,8 +10,10 @@ public class AStarPath
 
     private Cell target;
 
-    private MainManager manager;
+    private MainManager manager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
 
+
+    
     public List<Cell> CalculatePath(Cell start, Cell target)
     {
         this.target = target;
@@ -56,7 +57,7 @@ public class AStarPath
 
         return null;
     }
-
+    
     private void InvestigateNeighbors(AStarNode node)
     {
         List<Cell> neighborList = node.cell.GetNeighbors();
@@ -73,8 +74,8 @@ public class AStarPath
             if (neighborList[i].blocked)
                 continue;
 
-            Vector2Int currentPos = node.cell.GetPosition();
-            Vector2Int neighborPosition = neighborList[i].GetPosition();
+            Vector3Int currentPos = node.cell.GetPosition();
+            Vector3Int neighborPosition = neighborList[i].GetPosition();
 
             int g = CalculateG(neighborPosition, currentPos, node.g);
             int h = CalculateH(neighborPosition, target.GetPosition());
@@ -115,7 +116,7 @@ public class AStarPath
     }
 
 
-    private int CalculateG(Vector2Int current, Vector2Int goal, int g)
+    private int CalculateG(Vector3Int current, Vector3Int goal, int g)
     {
         if (current == goal)
             return g;
@@ -129,7 +130,7 @@ public class AStarPath
         return CalculateG(current, goal, g + dx != 0 && dy != 0 ? 14 : 10);
     }
 
-    private int CalculateH(Vector2Int current, Vector2Int target)
+    private int CalculateH(Vector3Int current, Vector3Int target)
     {
         return (Mathf.Abs(target.x - current.x) + Mathf.Abs(target.y - current.y)) * 10;
     }
