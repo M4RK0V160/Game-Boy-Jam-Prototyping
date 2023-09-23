@@ -10,7 +10,7 @@ public class AStarPath
 
     private Cell target;
 
-    private MainManager manager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
+    private  MainManager manager = MainManager.Instance;
 
 
     

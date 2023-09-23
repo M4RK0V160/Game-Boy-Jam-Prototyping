@@ -1,5 +1,4 @@
-using System;
-using System.Linq;
+
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,7 +7,7 @@ public enum movementDirection
     up, down, left, right
 }
 public class PlayerController : MonoBehaviour
-{
+{ 
 
     public UnityEvent<movementDirection> moveEvent;
     public MapManager mapManager;
@@ -18,7 +17,7 @@ public class PlayerController : MonoBehaviour
 
     public bool movementDone = true;
 
-    private AudioSource audioSource;
+    public AudioSource audioSource;
 
     public int HP;
     public int O2;
@@ -28,12 +27,16 @@ public class PlayerController : MonoBehaviour
     public bool facingRight;
 
 
-    [SerializeField] private AudioClip getHit;
+    [SerializeField] public AudioClip getHit;
 
     [SerializeField] private AudioClip step1;
     [SerializeField] private AudioClip step2;
 
+    [SerializeField] private AudioClip shootAudio;
+
     [SerializeField] private GameObject bulletPrefab;
+
+    public bool moved = false;
 
     private bool step;
     private void OnEnable()
@@ -49,7 +52,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         mapManager = GameObject.Find("MapManager").GetComponent<MapManager>();
-        mainManager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
+        mainManager = MainManager.Instance;
         audioSource = gameObject.GetComponent<AudioSource>();
         O2MultiplierBack = 0;
         O2MultiplierBack += O2Multiplier;
@@ -63,69 +66,66 @@ public class PlayerController : MonoBehaviour
         facingRight = true;
     }
     // Update is called once per frame
-    void Update()
-    {
-        if (HP <= 0)
-        {
-            gameObject.GetComponent<Animator>().SetTrigger("Die");
-        }
-
-        
-    }
 
     private void move(movementDirection direction) 
     {
-        if (step)
+        Debug.Log(moved);
+        if (moved == false)
         {
-            audioSource.PlayOneShot(step1);
-            step = false;
-        }
-        else
-        {
-            audioSource.PlayOneShot(step2);
-            step = true;
-        }
-        if (O2 <= 0)
-        {
-            takeAHit();
-        }
+            moved = true;
+            if (step)
+            {
+                audioSource.PlayOneShot(step1);
+                step = false;
+            }
+            else
+            {
+                audioSource.PlayOneShot(step2);
+                step = true;
+            }
+            if (O2 <= 0)
+            {
+                audioSource.PlayOneShot(getHit);
+                gameObject.GetComponent<Animator>().SetTrigger("GetHit");
+            }
 
-        switch (direction)
-        {
-            case movementDirection.up:
-                transform.Translate(Vector2.up);
-                mapManager.moveOccupiedCell(Vector2Int.up);
-                mainManager.passTurn();
-                break;
+            switch (direction)
+            {
+                case movementDirection.up:
+                    transform.Translate(Vector2.up);
+                    mapManager.moveOccupiedCell(Vector2Int.up);
+                    mainManager.passTurn();
+                    break;
 
-            case movementDirection.down:
-                transform.Translate(Vector2.down);
-                mapManager.moveOccupiedCell(Vector2Int.down);
-                mainManager.passTurn();
-                break;
-            case movementDirection.left:
-                transform.Translate(Vector2.left);
-                mapManager.moveOccupiedCell(Vector2Int.left);
-                mainManager.passTurn();
-                if (facingRight)
-                {
-                    flip();
-                    facingRight = false;
-                }
-                break;
-                
-            case movementDirection.right:
-                transform.Translate(Vector2.right);
-                mapManager.moveOccupiedCell(Vector2Int.right);
-                mainManager.passTurn();
-                if (!facingRight)
-                {
-                    flip();
-                    facingRight = true;
-                }
-                
-                break;
-        }   
+                case movementDirection.down:
+                    transform.Translate(Vector2.down);
+                    mapManager.moveOccupiedCell(Vector2Int.down);
+                    mainManager.passTurn();
+                    break;
+                case movementDirection.left:
+                    transform.Translate(Vector2.left);
+                    mapManager.moveOccupiedCell(Vector2Int.left);
+                    mainManager.passTurn();
+                    if (facingRight)
+                    {
+                        flip();
+                        facingRight = false;
+                    }
+                    break;
+
+                case movementDirection.right:
+                    transform.Translate(Vector2.right);
+                    mapManager.moveOccupiedCell(Vector2Int.right);
+                    mainManager.passTurn();
+                    if (!facingRight)
+                    {
+                        flip();
+                        facingRight = true;
+                    }
+
+                    break;
+            }
+        }
     }
 
     private void flip()
@@ -153,16 +153,23 @@ public class PlayerController : MonoBehaviour
     internal void takeAHit()
     {
         HP--;
+        if (HP <= 0)
+        {
+            gameObject.GetComponent<Animator>().SetTrigger("Die");
+        }
         gameObject.GetComponent<Animator>().ResetTrigger("GetHit");
-        audioSource.PlayOneShot(getHit);
+        
     }
 
     private void shoot()
     {
+        audioSource.PlayOneShot(shootAudio);
         gameObject.GetComponent<Animator>().ResetTrigger("Shoot");
         var bullet = Instantiate(bulletPrefab, occupiedCell.GetPositionCenter(), new Quaternion(0, 0, 0, 0));
-        bullet.GetComponent<BulletController>().initialize();
         bullet.GetComponent<BulletController>().shootingAtEnemy = true;
+        bullet.GetComponent<BulletController>().right = facingRight;
+        bullet.GetComponent<BulletController>().initialize();
+        
     }
 
     private void pickup()

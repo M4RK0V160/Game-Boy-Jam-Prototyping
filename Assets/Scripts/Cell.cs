@@ -12,7 +12,6 @@ public class Cell
     public bool blocked = false;
     public bool destroyable = false;
 
-    public PickupController pickup;
 
     [Space(20)]
     [Header("Pathfinding Variables")]
@@ -30,7 +29,7 @@ public class Cell
     }
     private void Awake()
     {
-        manager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
+        manager = MainManager.Instance;
     }
 
 

@@ -13,7 +13,7 @@ public class AStarPathDebug
 
     private Cell target;
 
-    private MainManager manager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
+    private MainManager manager = MainManager.Instance;
 
 
     public void InitCalculatePath(Cell target, Cell start)

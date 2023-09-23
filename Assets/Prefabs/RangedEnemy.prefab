@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4309145002554568561}
   - component: {fileID: 3649410063644986283}
-  - component: {fileID: 1402550304228600143}
   - component: {fileID: 2922638776138270977}
   - component: {fileID: 627133876676372690}
   - component: {fileID: 5076523322425057737}
+  - component: {fileID: 1426645597550409562}
   m_Layer: 0
   m_Name: RangedEnemy
   m_TagString: Enemy
@@ -88,21 +88,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &1402550304228600143
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7731173794976292725}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51f7c50f59d36594ca8f8c56bc0a4764, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  HP: 1
-  playerController: {fileID: 0}
-  aggroDistance: 6
 --- !u!61 &2922638776138270977
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -196,3 +181,25 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1426645597550409562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7731173794976292725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e90ca08e5fc323042b819456436f5a80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapManager: {fileID: 0}
+  moveAudio: {fileID: 8300000, guid: 3a728e4ae07291041b59ac4041edbd51, type: 3}
+  dieAudio: {fileID: 8300000, guid: 8ecd7f348b4125141903f9c0aff9866c, type: 3}
+  audioSource: {fileID: 0}
+  HP: 1
+  facingRight: 0
+  playerController: {fileID: 0}
+  aggroDistance: 6
+  bulletPrefab: {fileID: 5131459065042424505, guid: c7933111dfeaebe4bb0ea1560e02b7aa, type: 3}
+  shootAudio: {fileID: 8300000, guid: 58f80d9553981ee4791bb425f97e62da, type: 3}

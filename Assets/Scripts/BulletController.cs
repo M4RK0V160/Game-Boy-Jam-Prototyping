@@ -1,5 +1,4 @@
 
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class BulletController : MonoBehaviour
@@ -14,6 +13,7 @@ public class BulletController : MonoBehaviour
     private Vector3 targetPosition;
     private bool travel = false;
     public bool shootingAtEnemy = false;
+    public bool right;
 
     private void Awake()
     {
@@ -25,7 +25,7 @@ public class BulletController : MonoBehaviour
 
     public void initialize()
     {
-        if (player.facingRight)
+        if (right)
         {
             moveVector = Vector3.right;
         }
@@ -49,20 +49,16 @@ public class BulletController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") && shootingAtEnemy)
         {
-            Debug.Log("HitEnemy");
             collision.GetComponent<EnemyController>().takeAHit();
-            mainManager.passTurn();
             Destroy(gameObject);
         }
         else if (collision.gameObject.CompareTag("Player") && !shootingAtEnemy)
         {
                 collision.GetComponent<Animator>().SetTrigger("GetHit");
-                mainManager.passTurn();
                 Destroy(gameObject);
 
         }else if (collision.gameObject.CompareTag("Wall"))
         {
-            mainManager.passTurn();
             Destroy(gameObject);
         }
     }

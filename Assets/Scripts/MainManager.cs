@@ -1,7 +1,7 @@
 
+
 using System;
 using System.Collections;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,7 +24,7 @@ public class MainManager : MonoBehaviour
 {
 
     //Game Managing stuff
-    public MainManager Instance;
+    public static MainManager Instance;
     public State state;
     public Turn turn;
 
@@ -44,21 +44,35 @@ public class MainManager : MonoBehaviour
     //DebugMode
     public bool DebugMode = false;
     public bool initialized = false;
-
+    
    
 
     //shooting 
     [SerializeField] private GameObject bulletPrefab;
 
-
+    public bool[] pickedComponents = { false, false, false, false, false };
  
 
     private void Awake()
     {
-        inputActions = new InputActions();
+
+        if(Instance == null)
+        {
+            Instance = this;
+            inputActions = new InputActions();
+            state = State.menu;
+            turn = Turn.player;
+            DontDestroyOnLoad(this);
+        }
+        else if(Instance != this)
+        {
+            Destroy(this);
+        }
+
+            state = State.menu;
+            turn = Turn.player;
 
     }
-
     private void OnEnable()
     {
         inputActions.BaseInput.Enable();
@@ -70,38 +84,27 @@ public class MainManager : MonoBehaviour
         inputActions.BaseInput.Disable();
     }
 
-    void Start()
-    {
-        if (Instance == null)
-        {
-            state = State.menu;
-            turn = Turn.player;
-
-            Instance = this;
-        }
-        else
-        {
-            Destroy(this);
-        }
-        DontDestroyOnLoad(this);
-    }
 
     void Update()
     {
+        
         switch (state)
         {
             case State.init:
 
                 initialize();
                 mapManager.generateTerrain();
-
                 state = State.game;
 
                 break;
 
             case State.game:
 
-                HandleDebugInput();
+                HandleInput();
+                if(SceneManager.GetActiveScene().name == "MainMenu")
+                {
+                    state = State.menu;
+                }
 
                 switch (turn)
                 {
@@ -127,20 +130,43 @@ public class MainManager : MonoBehaviour
                         passTurn();
                         break;   
                 }
-
+                var win = true;
+                foreach(bool b in pickedComponents)
+                {
+                    if (b == false)
+                    {
+                        win = false;
+                    }
+                }
+                if (win)
+                {
+                    EndGame();
+                }
                 break;
 
             case State.menu:
+
+                if (Input.GetKeyDown(KeyCode.Return))
+                {
+                    SceneManager.LoadScene("GameScene");
+                }
+
                 if (SceneManager.GetActiveScene().name == "GameScene")
                 {                
                     state = State.init;
                     turn = Turn.player;
                 }
+                for(int i = 0; i < 5; i++)
+                {
+                    pickedComponents[i] = false;
+                }
+
                 break;
 
             case State.waiting:
 
                 break;
+
 
         }
     }
@@ -150,20 +176,10 @@ public class MainManager : MonoBehaviour
     //========================
     //Input Handlers
     //========================
-    private void HandleDebugInput()
-    {
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            mapManager.generateTerrain();
-        }
+    private void HandleInput()
+    { 
 
-
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            DebugMode = !DebugMode;
-        }
-
-        if(Input.GetKeyUp(KeyCode.P)) 
+        if (Input.GetKeyUp(KeyCode.S)) 
         {
             passTurn();
         }
@@ -187,8 +203,7 @@ public class MainManager : MonoBehaviour
     {
 
         if ( turn == Turn.player &&
-            checkCollision(new Vector2Int((int)direction.x, (int)direction.y)) && 
-            playerController.movementDone == true)
+            checkCollision(new Vector2Int((int)direction.x, (int)direction.y)))
         {
             if (state == State.game)
             {
@@ -232,9 +247,20 @@ public class MainManager : MonoBehaviour
             {
                 if(mapManager.cells[playerController.occupiedCell.GetPosition().x + direction.x, playerController.occupiedCell.GetPosition().y + direction.y] == enemy.GetComponent<EnemyController>().occupiedCell)
                 {
+                    if(playerController.facingRight == false && direction == Vector2Int.right)
+                    {
+                        playerController.gameObject.GetComponent<SpriteRenderer>().flipX = false;
+                        playerController.facingRight = true;
+                    }
+                    else if(playerController.facingRight == true && direction == Vector2Int.left)
+                    {
+                        playerController.gameObject.GetComponent<SpriteRenderer>().flipX = true;
+                        playerController.facingRight = false;
+                    }
                     playerController.GetComponent<Animator>().SetTrigger("Melee");
+                    
                     Attack(enemy.GetComponent<EnemyController>());
-                    passTurn();
+                    
 
                 }
             }
@@ -282,6 +308,7 @@ public class MainManager : MonoBehaviour
                
                 //StartCoroutine(passTurnWaitCoroutine());
                 turn = Turn.player;
+                playerController.moved = false;
                 break;
 
         }
@@ -296,9 +323,17 @@ public class MainManager : MonoBehaviour
 
     internal void EndGame()
     {
+        playerController.reset();
+        StartCoroutine(EndGameScreenCoroutine());
+    }
+
+    private IEnumerator EndGameScreenCoroutine()
+    {
+        
+        mapManager.endScreen.SetActive(true);
+        yield return new WaitForSeconds(3);
         turn = Turn.player;
         state = State.menu;
-        playerController.reset();
         SceneManager.LoadScene("MainMenu");
     }
 }

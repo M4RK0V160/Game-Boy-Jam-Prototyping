@@ -1,4 +1,4 @@
-using System.Collections;
+
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 
 public class EnemyController : MonoBehaviour
 {
-    private MapManager mapManager;
+    public MapManager mapManager;
     private Cell target;
     private Vector3Int targetPosition;
     private List<Cell> path;
@@ -14,15 +14,20 @@ public class EnemyController : MonoBehaviour
     public Cell occupiedCell;
     private MainManager mainManager;
 
+    public AudioClip moveAudio;
+    public AudioClip dieAudio;
+
+    public AudioSource audioSource;
+
 
     public int HP;
 
-    private bool shake;
-    private bool Aggro;
+    public bool Aggro;
     private bool inRange;
 
-    private bool facingRight;
+    public bool facingRight;
 
+    public bool alive;
 
     public PlayerController playerController;
 
@@ -31,34 +36,20 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+        alive = true;
         mapManager = GameObject.Find("MapManager").GetComponent<MapManager>();
         pathfinder = new AStarPath();
         playerController = GameObject.Find("Player").GetComponent<PlayerController>();
         occupiedCell = mapManager.cells[(int)transform.position.x, (int)transform.position.y];
         Aggro = false;
         target = CheckAggro();
-        targetPosition = new Vector3Int(target.GetPosition().x, target.GetPosition().y);
-        mainManager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
-
+        if (target != null) { targetPosition = new Vector3Int(target.GetPosition().x, target.GetPosition().y); }
+        mainManager = MainManager.Instance;
+        audioSource = GameObject.Find("SFX Audio Source").GetComponent<AudioSource>();
         facingRight = true;
         
     }
 
-    private void Update()
-    {
-        if (shake)
-        {
-            transform.position.Set(Mathf.Sin(Time.time * 1) * 1, transform.position.y, 0);
-        }
-        {
-            
-        }
-        if (HP <= 0)
-        {
-            occupiedCell.Desocupy();
-            Destroy(gameObject);
-        }
-    }
     private void paintPath(Tile colour)
     {
         if (path != null)
@@ -75,21 +66,24 @@ public class EnemyController : MonoBehaviour
 
     private Cell CheckAggro()
     {
-        if((playerController.occupiedCell.GetPosition()-occupiedCell.GetPosition()).magnitude < aggroDistance)
+        if (playerController != null && occupiedCell != null)
         {
-            target = playerController.occupiedCell;
-            Aggro = true;
+            if ((playerController.occupiedCell.GetPosition() - occupiedCell.GetPosition()).magnitude < aggroDistance)
+            {
+                Aggro = true;
+                return playerController.occupiedCell;
+            }
+            else
+            {
+                Aggro = false;
+               return occupiedCell;
+                
+            }
         }
-        else
-        {
-            target = occupiedCell;
-            Aggro = false;
-        }
+        return null;
 
-        return target;
-        
     }
-    private bool CheckRange()
+    public virtual bool CheckRange()
     {
         if (occupiedCell.GetNeighbors().Contains(playerController.occupiedCell))
         { 
@@ -101,10 +95,11 @@ public class EnemyController : MonoBehaviour
     private void Step()
     {
         occupiedCell.blocked = false;
-
+        audioSource.PlayOneShot(moveAudio);
         path.Remove(path.First());
         var nextCell = path.First();
-        var moveVector = nextCell.GetPosition() - occupiedCell.GetPosition();
+       
+        var moveVector = nextCell == playerController.occupiedCell ? Vector3Int.zero : nextCell.GetPosition() - occupiedCell.GetPosition();
         
         if (facingRight)
         {
@@ -132,13 +127,13 @@ public class EnemyController : MonoBehaviour
 
 
 
-    public void Act()
+    public virtual void Act()
     {
         occupiedCell = mapManager.cells[(int)transform.position.x, (int)transform.position.y];
         target = CheckAggro();
         inRange = CheckRange();
 
-        if (Aggro)
+        if (Aggro && HP > 0)
         {
            if(mainManager.DebugMode) paintPath(mapManager.Floors[Random.Range(0, mapManager.Floors.Length)]);
             path = pathfinder.CalculatePath(occupiedCell, target);
@@ -155,22 +150,40 @@ public class EnemyController : MonoBehaviour
         } 
     }
 
-    private void Attack()
+    public virtual void Attack()
     {
-        shake = true;
+        playerController.audioSource.PlayOneShot(playerController.getHit);
+        gameObject.GetComponent<Animator>().SetTrigger("attack");
         playerController.GetComponent<Animator>().SetTrigger("GetHit");
-        StartCoroutine(attackDuration());
-        shake = false;
-    }
-
-    private IEnumerator attackDuration()
-    {
-        yield return new WaitForSeconds(1);
+        
     }
 
     public void takeAHit()
     {
+        audioSource.PlayOneShot(dieAudio);
+        gameObject.GetComponent<Animator>().SetTrigger("GetHit");
         HP--;
-        //audioSource.playOneShot(getHit);
+        if (HP <= 0 && alive)
+        {
+            alive = false;
+            occupiedCell.Desocupy();
+            gameObject.GetComponent<Animator>().SetBool("Dead", true);
+        }
+    }
+
+    public void resetHit()
+    {
+        gameObject.GetComponent<Animator>().ResetTrigger("GetHit");
+    }
+
+    public void die()
+    {
+        //Drop Score Points
+        Destroy(gameObject);
+    }
+
+    public void resetAttack()
+    {
+        gameObject.GetComponent<Animator>().ResetTrigger("attack");
     }
 }

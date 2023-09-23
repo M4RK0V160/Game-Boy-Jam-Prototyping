@@ -100,6 +100,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51f7c50f59d36594ca8f8c56bc0a4764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  moveAudio: {fileID: 8300000, guid: fc11bf77648baa142a1418529d5e7337, type: 3}
+  dieAudio: {fileID: 8300000, guid: 8ecd7f348b4125141903f9c0aff9866c, type: 3}
+  audioSource: {fileID: 0}
   HP: 1
   playerController: {fileID: 0}
   aggroDistance: 6

@@ -10,6 +10,8 @@ public class UiManager : MonoBehaviour
     public PlayerController playerController;
     [SerializeField] private Sprite[] HealthSprites;
     [SerializeField] private Sprite[] OxigenSprites;
+    [SerializeField] private Sprite[] ComponentSprites;
+    public GameObject[] componentObjects = new GameObject[5];
 
     private Image health;
     private Image Oxigen;
@@ -18,7 +20,7 @@ public class UiManager : MonoBehaviour
 
     public void Awake()
     {
-        mainManager = GameObject.Find("MainManager").GetComponent<MainManager>().Instance;
+        mainManager = MainManager.Instance;
         initialized = false;
         
     }
@@ -41,8 +43,50 @@ public class UiManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        health.sprite = HealthSprites[playerController.HP];
-        Oxigen.sprite = OxigenSprites[playerController.O2];
+        if (playerController.HP <= 4)
+        {
+            if (playerController.HP > 0)
+            {
+                health.sprite = HealthSprites[playerController.HP];
+            }
+            else
+            {
+                playerController.HP = 0;
+                health.sprite = HealthSprites[playerController.HP];
+            }
+            
+        }
+        else
+        {
+            playerController.HP = 4;
+            health.sprite= HealthSprites[playerController.HP];
+        }
+        if (playerController.O2 <= 4)
+        {
+            if (playerController.O2 > 0)
+            {
+                Oxigen.sprite = OxigenSprites[playerController.O2];
+            }
+            else
+            {
+                playerController.O2 = 0;
+                Oxigen.sprite = OxigenSprites[playerController.O2]; 
+            }
+        }
+        else
+        {
+            playerController.HP = 4;
+            Oxigen.sprite = OxigenSprites[playerController.O2];
+        }
+
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (mainManager.pickedComponents[i])
+            {
+                GameObject.Find("Component" + (i + 1).ToString()).GetComponent<Image>().sprite = ComponentSprites[i];
+            }
+        }
     }
 
     public void startGame()
